@@ -1098,24 +1098,34 @@ function unpackPayload(packed){
   if(window.LZString&&LZString.decompressFromEncodedURIComponent) return JSON.parse(LZString.decompressFromEncodedURIComponent(packed));
   throw new Error("Link helper did not load");
 }
+function linkNotes(n){
+  /* Build a shareable-link copy of the notes WITHOUT the heavy base64 image data.
+     Images can't fit in a URL and keep the link WhatsApp-safe, so the shared student
+     copy is text-only. The professor's own preview/PDF still uses the full images in S.notes. */
+  var copy={};
+  for(var k in n){ if(k!=="images") copy[k]=n[k]; }
+  return copy;
+}
 function makeLink(){
   if(!S.notes){toast("Generate notes first","err");return;}
   if(S.price<=0){toast("Set a price","err");return;}
   if(!validRazorpayKey(S.rzp)){toast("Add a valid Razorpay Key ID in Setup before sharing","err");go("settings");return;}
-  var payload={t:S.notes,p:S.price,n:S.tier,prof:S.name,inst:S.inst,subj:S.subj,rzp:S.rzp,outLang:S.outLang};
+  var hadImages=!!(S.notes.images&&S.notes.images.length);
+  var payload={t:linkNotes(S.notes),p:S.price,n:S.tier,prof:S.name,inst:S.inst,subj:S.subj,rzp:S.rzp,outLang:S.outLang};
   var packed=packPayload(payload);
   var base=location.origin+location.pathname;
   var link=base+"#buy="+packed;
   if(link.length>7000){
-    toast("This link is too large to share. Remove PDF images or shorten the notes, then generate again.","err");
+    toast("This lecture's notes are very long. Trim the notes text a little, then make the link again.","err");
     return;
   }
   document.getElementById("shareLink").value=link;
   document.getElementById("shareArea").classList.remove("gone");
+  if(hadImages) toast("Link ready. Note: your PDF images aren't included in the shared copy (links can't carry images) - students get the full text notes.","ok");
   /* save to library */
   S.lib.unshift({topic:S.notes.topic,tier:S.tier,price:S.price,when:Date.now(),link:link});
   S.lib=S.lib.slice(0,40); save();
-  toast("Link ready","ok");
+  if(!hadImages) toast("Link ready","ok");
 }
 function copyLink(){var i=document.getElementById("shareLink");i.select();navigator.clipboard.writeText(i.value).then(function(){toast("Copied","ok");}).catch(function(){toast("Select and copy manually","");});}
 function shareWA(){
