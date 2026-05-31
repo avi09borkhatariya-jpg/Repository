@@ -1106,7 +1106,16 @@ function linkNotes(n){
   for(var k in n){ if(k!=="images") copy[k]=n[k]; }
   return copy;
 }
-function makeLink(){
+async function shortenLink(longUrl){
+  /* Ask our server to make a short bit.ly link (token stays server-side).
+     If Bitly isn't configured or fails, we quietly keep the full link - it still works. */
+  try{
+    var r=await postJSON("/api/shorten",{url:longUrl});
+    if(r&&r.short&&/^https?:\/\//i.test(r.short)) return r.short;
+  }catch(e){}
+  return longUrl;
+}
+async function makeLink(){
   if(!S.notes){toast("Generate notes first","err");return;}
   if(S.price<=0){toast("Set a price","err");return;}
   if(!validRazorpayKey(S.rzp)){toast("Add a valid Razorpay Key ID in Setup before sharing","err");go("settings");return;}
@@ -1114,18 +1123,23 @@ function makeLink(){
   var payload={t:linkNotes(S.notes),p:S.price,n:S.tier,prof:S.name,inst:S.inst,subj:S.subj,rzp:S.rzp,outLang:S.outLang};
   var packed=packPayload(payload);
   var base=location.origin+location.pathname;
-  var link=base+"#buy="+packed;
-  if(link.length>7000){
+  var longLink=base+"#buy="+packed;
+  if(longLink.length>7000){
     toast("This lecture's notes are very long. Trim the notes text a little, then make the link again.","err");
     return;
   }
-  document.getElementById("shareLink").value=link;
+  var input=document.getElementById("shareLink");
+  input.value=longLink;
   document.getElementById("shareArea").classList.remove("gone");
-  if(hadImages) toast("Link ready. Note: your PDF images aren't included in the shared copy (links can't carry images) - students get the full text notes.","ok");
+  toast("Making a short link...","ok");
+  var link=await shortenLink(longLink);
+  input.value=link;
+  if(link!==longLink) toast("Short link ready","ok");
+  else toast("Using the full link (short link unavailable)","");
+  if(hadImages) toast("Note: your PDF images aren't in the shared copy - students get the full text notes.","ok");
   /* save to library */
   S.lib.unshift({topic:S.notes.topic,tier:S.tier,price:S.price,when:Date.now(),link:link});
   S.lib=S.lib.slice(0,40); save();
-  if(!hadImages) toast("Link ready","ok");
 }
 function copyLink(){var i=document.getElementById("shareLink");i.select();navigator.clipboard.writeText(i.value).then(function(){toast("Copied","ok");}).catch(function(){toast("Select and copy manually","");});}
 function shareWA(){
