@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LectureAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<style>
+:root{
+  --bg:#fafafa;--surface:#fff;--ink:#111;--navy:#1a1a2e;
+  --red:#c8392b;--green:#1a6e3c;--amber:#9a6700;
+  --mut:#6b6b78;--ft:#a0a0ac;--line:#e6e6ea;--line2:#d4d4dc;
+  --navy-bg:#f0f1f6;--green-bg:#eaf3ee;--red-bg:#fbecea;--amber-bg:#fbf3e2;
+  --sans:'IBM Plex Sans',system-ui,sans-serif;
+  --serif:'IBM Plex Serif',Georgia,serif;
+  --mono:'IBM Plex Mono',monospace;
+  --r:10px;--r2:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
+.app{max-width:480px;margin:0 auto;min-height:100%;background:var(--bg);position:relative;padding-bottom:78px}
+.scr{display:none;animation:fade .25s ease}
+.scr.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* top bar */
+.top{position:sticky;top:0;z-index:40;background:rgba(250,250,250,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;min-height:54px}
+.brand{font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:-.5px;display:flex;align-items:center;gap:7px}
+.brand .dot{width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block}
+.top-act{font-family:var(--mono);font-size:11px;color:var(--mut);border:1px solid var(--line2);padding:5px 10px;border-radius:7px;background:var(--surface);cursor:pointer}
+.top-act:active{transform:scale(.97)}
+
+.wrap{padding:18px}
+.h1{font-family:var(--serif);font-size:25px;font-weight:600;letter-spacing:-.4px;line-height:1.2;margin-bottom:6px}
+.h2{font-family:var(--serif);font-size:19px;font-weight:600;margin-bottom:4px}
+.lead{color:var(--mut);font-size:14px;margin-bottom:18px;line-height:1.6}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);margin-bottom:10px;font-weight:500}
+
+/* cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:18px;margin-bottom:14px}
+.card-t{font-weight:600;font-size:15px;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.card-s{color:var(--mut);font-size:13px;line-height:1.55}
+
+/* forms */
+label{display:block;font-size:12px;font-weight:500;color:var(--ink);margin-bottom:6px;letter-spacing:.2px}
+input,select,textarea{width:100%;font-family:var(--sans);font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);padding:12px 13px;outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--navy)}
+textarea{resize:vertical;min-height:96px;line-height:1.55}
+.fld{margin-bottom:14px}
+.hint{font-size:11px;color:var(--ft);margin-top:5px;line-height:1.5}
+.hint a{color:var(--green)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5L6 7.5L9 4.5' stroke='%236b6b78' stroke-width='1.3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px}
+
+/* buttons */
+.btn{width:100%;font-family:var(--sans);font-size:15px;font-weight:600;padding:14px;border-radius:var(--r);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:transform .1s;min-height:50px}
+.btn:active{transform:scale(.985)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-p{background:var(--navy);color:#fff}
+.btn-g{background:var(--green);color:#fff}
+.btn-o{background:var(--surface);color:var(--ink);border:1px solid var(--line2)}
+.btn-wa{background:#1faa52;color:#fff}
+.btn-sm{font-size:13px;padding:10px 14px;min-height:0;width:auto}
+.btn-row{display:flex;gap:10px}
+.btn-row .btn{flex:1}
+
+/* checkbox */
+.chk{display:flex;align-items:flex-start;gap:11px;background:var(--navy-bg);border:1px solid var(--line);border-radius:var(--r);padding:13px;cursor:pointer;margin-bottom:16px}
+.chk-box{width:22px;height:22px;border:1.5px solid var(--line2);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--surface);transition:all .15s}
+.chk.ck .chk-box{background:var(--green);border-color:var(--green)}
+.chk-box svg{opacity:0;transition:opacity .15s}
+.chk.ck .chk-box svg{opacity:1}
+.chk-tx{font-size:13px;color:var(--ink);line-height:1.5}
+.chk-tx b{font-weight:600}
+
+/* steps / progress */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:20px;padding:0 4px}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative}
+.step .n{width:28px;height:28px;border-radius:50%;background:var(--surface);border:1.5px solid var(--line2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:600;color:var(--ft);z-index:2}
+.step.done .n{background:var(--green);border-color:var(--green);color:#fff}
+.step.now .n{background:var(--navy);border-color:var(--navy);color:#fff}
+.step .l{font-size:9.5px;color:var(--ft);font-weight:500;letter-spacing:.2px}
+.step.now .l,.step.done .l{color:var(--ink)}
+.step:not(:last-child)::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:1.5px;background:var(--line2);z-index:1}
+.step.done:not(:last-child)::after{background:var(--green)}
+
+/* upload zone */
+.dz{border:1.5px dashed var(--line2);border-radius:var(--r2);padding:30px 18px;text-align:center;background:var(--surface);cursor:pointer;transition:all .15s}
+.dz:active,.dz.drag{border-color:var(--navy);background:var(--navy-bg)}
+.dz .ic{font-size:30px;margin-bottom:8px}
+.dz .t1{font-weight:600;font-size:15px;margin-bottom:3px}
+.dz .t2{font-size:12px;color:var(--mut)}
+.file-tag{display:flex;align-items:center;gap:10px;background:var(--green-bg);border:1px solid #c9e3d3;border-radius:var(--r);padding:11px 13px;margin-top:12px;font-size:13px}
+.file-tag .x{margin-left:auto;color:var(--mut);cursor:pointer;font-size:18px;line-height:1}
+.input-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+.mini-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);padding:14px}
+.mini-card .mini-t{font-weight:600;font-size:13px;margin-bottom:5px}
+.mini-card .mini-s{font-size:12px;color:var(--mut);line-height:1.45;margin-bottom:10px}
+.image-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.img-card{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.img-card img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--bg)}
+.img-meta{padding:8px}
+.img-meta input{font-size:12px;padding:8px 9px}
+.img-name{font-size:10px;color:var(--ft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+.img-remove{width:100%;margin-top:6px;border:none;background:var(--red-bg);color:var(--red);border-radius:8px;padding:7px;font-size:11px;font-weight:600}
+@media(max-width:360px){.image-grid{grid-template-columns:1fr}}
+
+/* progress bar */
+.pbar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin:12px 0 6px}
+.pbar .fill{height:100%;background:var(--green);width:0;transition:width .4s ease;border-radius:4px}
+.pmeta{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--mut)}
+
+/* badge */
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;padding:5px 10px;border-radius:7px;font-family:var(--mono)}
+.badge-g{background:var(--green-bg);color:var(--green)}
+.badge-a{background:var(--amber-bg);color:var(--amber)}
+.badge-n{background:var(--navy-bg);color:var(--navy)}
+
+/* notes review */
+.nsec{border:1px solid var(--line);border-radius:var(--r);margin-bottom:11px;overflow:hidden}
+.nsec-h{background:var(--navy-bg);padding:11px 13px;font-weight:600;font-size:14px}
+.nsec-b{padding:13px}
+.editable{border:1px dashed transparent;border-radius:6px;padding:3px 5px;margin:-3px -5px;transition:border .15s;cursor:text}
+.editable:focus{border-color:var(--navy);outline:none;background:var(--surface)}
+.kp{display:flex;gap:8px;font-size:13px;margin-bottom:6px;line-height:1.5}
+.kp .b{color:var(--green);flex-shrink:0;font-weight:700}
+.colorbox{border-radius:var(--r);padding:12px 13px;margin-bottom:11px}
+.cb-pearl{background:var(--green-bg);border:1px solid #c9e3d3}
+.cb-trap{background:var(--red-bg);border:1px solid #f0cdc8}
+.cb-rev{background:var(--navy-bg);border:1px solid var(--line)}
+.cb-h{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:8px}
+.cb-pearl .cb-h{color:var(--green)}
+.cb-trap .cb-h{color:var(--red)}
+.cb-rev .cb-h{color:var(--navy)}
+.cb-item{font-size:13px;line-height:1.5;padding:5px 0;border-top:1px solid rgba(0,0,0,.05)}
+.cb-item:first-of-type{border-top:none}
+
+/* price tiers */
+.tiers{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+.tier{border:1.5px solid var(--line2);border-radius:var(--r);padding:11px 8px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surface)}
+.tier.sel{border-color:var(--navy);background:var(--navy-bg)}
+.tier .tn{font-size:11px;color:var(--mut);margin-bottom:3px}
+.tier .tp{font-family:var(--serif);font-size:17px;font-weight:600}
+.tier.sel .tp{color:var(--navy)}
+
+/* share link */
+.linkbox{display:flex;gap:8px;background:var(--bg);border:1px solid var(--line2);border-radius:var(--r);padding:4px 4px 4px 12px;align-items:center;margin-bottom:12px}
+.linkbox input{border:none;background:none;font-family:var(--mono);font-size:12px;padding:8px 0;flex:1;min-width:0}
+.linkbox input:focus{border:none}
+
+/* split preview */
+.split{display:flex;gap:10px;margin:14px 0}
+.split .s{flex:1;border-radius:var(--r);padding:13px;text-align:center}
+.split .s-g{background:var(--green-bg);border:1px solid #c9e3d3}
+.split .s-n{background:var(--navy-bg);border:1px solid var(--line)}
+.split .lbl{font-size:11px;color:var(--mut);margin-bottom:3px}
+.split .amt{font-family:var(--serif);font-size:21px;font-weight:600}
+.split .s-g .amt{color:var(--green)}
+.split .s-n .amt{color:var(--navy)}
+.split .pct{font-size:10px;color:var(--ft);font-family:var(--mono);margin-top:2px}
+
+/* library list */
+.lib-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px;cursor:pointer;transition:transform .1s}
+.lib-item:active{transform:scale(.99)}
+.lib-item .li-t{font-weight:600;font-size:15px;margin-bottom:2px}
+.lib-item .li-m{font-size:12px;color:var(--mut);font-family:var(--mono)}
+.empty{text-align:center;padding:50px 20px;color:var(--ft)}
+.empty .ic{font-size:38px;margin-bottom:10px;opacity:.5}
+
+/* bottom nav */
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+.nav button{flex:1;background:none;border:none;padding:11px 0 13px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--ft);font-family:var(--sans)}
+.nav button.on{color:var(--navy)}
+.nav .ni{font-size:21px;line-height:1}
+.nav .nl{font-size:10px;font-weight:500}
+
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(20,20,30,.5);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.ov.on{display:flex}
+.sheet{background:var(--surface);width:100%;max-width:480px;border-radius:18px 18px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));animation:up .3s ease;max-height:90vh;overflow-y:auto}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+.sheet-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.sheet-t{font-family:var(--serif);font-size:19px;font-weight:600}
+.sheet-x{font-size:24px;color:var(--mut);cursor:pointer;line-height:1;border:none;background:none}
+.grip{width:38px;height:4px;background:var(--line2);border-radius:3px;margin:0 auto 16px}
+
+/* toast */
+.toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy);color:#fff;font-size:13px;font-weight:500;padding:11px 18px;border-radius:10px;z-index:200;opacity:0;transition:all .3s;pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{background:var(--green)}
+.toast.err{background:var(--red)}
+
+.spin{width:17px;height:17px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:none}
+.spin.on{display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.gone{display:none!important}
+.mono{font-family:var(--mono)}
+.divider{height:1px;background:var(--line);margin:16px 0}
+.warn{background:var(--amber-bg);border:1px solid #ecd9a8;border-radius:var(--r);padding:11px 13px;font-size:12px;color:#7a5200;line-height:1.5;margin-bottom:14px;display:flex;gap:9px}
+.warn .ic{flex-shrink:0}
+</style>
+</head>
+<body>
+
+<!-- ============ STUDENT CHECKOUT (separate, shown when #buy= present) ============ -->
+<div class="app" id="checkoutApp" style="display:none">
+  <div class="top"><div class="brand"><span class="dot"></span>LectureAI</div><span class="top-act" id="coSecure">Secure</span></div>
+  <div class="wrap">
+    <div class="eyebrow" id="coInst">Study material</div>
+    <div class="h1" id="coTopic">Lecture notes</div>
+    <div class="lead" id="coProf">by your professor</div>
+
+    <div class="card">
+      <div class="card-t"><span id="coTierName">Study Pack</span></div>
+      <div class="card-s" id="coDesc">Structured notes, key points, exam tips and quick revision - built only from this lecture.</div>
+      <div class="divider"></div>
+      <div style="display:flex;align-items:baseline;justify-content:space-between">
+        <span class="card-s">Price</span>
+        <span style="font-family:var(--serif);font-size:28px;font-weight:600">Rs <span id="coPrice">499</span></span>
+      </div>
+    </div>
+
+    <div class="fld">
+      <label>Your full name</label>
+      <input id="coName" placeholder="As it should appear on your copy" autocomplete="name">
+      <div class="hint">Your name is watermarked on every page - this copy is uniquely yours.</div>
+    </div>
+    <div class="fld">
+      <label>Mobile number</label>
+      <input id="coPhone" placeholder="+91 " inputmode="tel" autocomplete="tel">
+    </div>
+
+    <button class="btn btn-g" id="coPay" onclick="studentPay()">
+      <span id="coPayTx">Pay Rs 499 with UPI</span><div class="spin" id="coPaySpin"></div>
+    </button>
+    <div class="hint" style="text-align:center;margin-top:10px">UPI - Cards - Net banking - via Razorpay</div>
+
+    <div id="coDone" class="gone" style="margin-top:18px">
+      <div class="card" style="border-color:#c9e3d3;background:var(--green-bg)">
+        <div class="card-t" style="color:var(--green)">Payment received</div>
+        <div class="card-s">Your personalised notes are downloading. Keep this file - it's watermarked to your name.</div>
+        <button class="btn btn-g btn-sm" style="width:100%;margin-top:12px" onclick="studentDownload()">Download my notes again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAIN PROFESSOR APP ============ -->
+<div class="app" id="mainApp">
+  <div class="top">
+    <div class="brand"><span class="dot"></span>LectureAI</div>
+    <span class="top-act" id="connStatus" onclick="go('settings')">Setup</span>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div class="scr on" id="onboarding">
+    <div class="wrap">
+      <div class="eyebrow">For professors</div>
+      <div class="h1">Turn your lecture into study notes your students will buy.</div>
+      <div class="lead">Upload your recording. We build clean, exam-ready notes - using only what you taught - and a link you drop in your class group. You keep 70%.</div>
+
+      <div class="fld"><label>Your name</label><input id="obName" placeholder="Dr. A. Sharma"></div>
+      <div class="fld"><label>Institution</label><input id="obInst" placeholder="KEM Hospital, Mumbai"></div>
+      <div class="fld"><label>Subject you teach</label><input id="obSubj" placeholder="Physiology"></div>
+
+      <div class="chk" id="obChk" onclick="toggleChk()">
+        <div class="chk-box"><svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5L5 9.5L11 3.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="chk-tx"><b>I own the rights to my lectures.</b> The content I upload is my own work and I'm allowed to sell notes based on it.</div>
+      </div>
+
+      <button class="btn btn-p" onclick="finishOnboard()">Get started</button>
+      <div class="hint" style="text-align:center;margin-top:12px">Free to use - No card needed - Your data stays on your device</div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="scr" id="home">
+    <div class="wrap">
+      <div class="eyebrow" id="homeHi">Welcome back</div>
+      <div class="h1">Your lectures</div>
+      <div class="lead">Create a new study pack from a recording, or open one you've already made.</div>
+      <button class="btn btn-p" onclick="newLecture()" style="margin-bottom:18px">+ New lecture</button>
+      <div id="libPreview"></div>
+    </div>
+  </div>
+
+  <!-- NEW LECTURE FLOW -->
+  <div class="scr" id="flow">
+    <div class="wrap">
+      <div class="steps" id="stepsBar">
+        <div class="step now" data-s="1"><div class="n">1</div><div class="l">Details</div></div>
+        <div class="step" data-s="2"><div class="n">2</div><div class="l">Upload</div></div>
+        <div class="step" data-s="3"><div class="n">3</div><div class="l">Notes</div></div>
+        <div class="step" data-s="4"><div class="n">4</div><div class="l">Review</div></div>
+        <div class="step" data-s="5"><div class="n">5</div><div class="l">Share</div></div>
+      </div>
+
+      <!-- step 1 details -->
+      <div id="f1">
+        <div class="h2">Lecture details</div>
+        <div class="lead">These appear on the cover of every PDF.</div>
+        <div class="fld"><label>Lecture topic</label><input id="lcTopic" placeholder="Cardiopulmonary responses to diving"></div>
+        <div class="fld"><label>Language of the lecture</label>
+          <select id="lcLang">
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="mr">Marathi</option>
+            <option value="ta">Tamil</option>
+            <option value="te">Telugu</option>
+          </select>
+          <div class="hint">This helps transcription hear your lecture correctly.</div>
+        </div>
+        <div class="fld"><label>Output language for notes and PDF</label>
+          <select id="outLang">
+            <option value="same">Same as transcript</option>
+            <option value="en">English</option>
+            <option value="hi">Hindi</option>
+            <option value="mr">Marathi</option>
+            <option value="ta">Tamil</option>
+            <option value="te">Telugu</option>
+          </select>
+          <div class="hint">Choose "Same as transcript" to keep the PDF in the input language, or force a specific output language.</div>
+        </div>
+        <button class="btn btn-p" onclick="step(2)">Continue</button>
+      </div>
+
+      <!-- step 2 upload -->
+      <div id="f2" class="gone">
+        <div class="h2">Add lecture source</div>
+        <div class="lead">Use audio or a transcript. Images are optional and will be placed inside the PDF where they fit best.</div>
+        <div class="dz" id="dz" onclick="document.getElementById('fileInput').click()">
+          <div class="ic">Audio</div>
+          <div class="t1">Tap to choose audio</div>
+          <div class="t2">or drag a file here</div>
+        </div>
+        <input type="file" id="fileInput" accept="audio/*,.mp3,.m4a,.wav" class="gone" onchange="onFile(event)">
+        <div id="fileTag"></div>
+        <div id="transcribeArea" class="gone" style="margin-top:16px">
+          <button class="btn btn-g" id="trBtn" onclick="doTranscribe()"><span id="trTx">Transcribe with Groq Whisper</span><div class="spin" id="trSpin"></div></button>
+          <div id="trProg" class="gone"><div class="pbar"><div class="fill" id="trFill"></div></div><div class="pmeta"><span id="trLbl">Uploading...</span><span id="trPct">0%</span></div></div>
+        </div>
+        <div class="input-grid">
+          <div class="mini-card">
+            <div class="mini-t">Paste or type transcript</div>
+            <div class="mini-s">You can skip audio completely if you already have the text.</div>
+            <textarea id="directTranscript" oninput="onTranscriptInput()" placeholder="Paste the lecture transcript here..." style="min-height:150px;font-size:13px"></textarea>
+          </div>
+          <div class="mini-card">
+            <div class="mini-t">Upload transcript file</div>
+            <div class="mini-s">Accepts .txt files. The text will be copied into the transcript box.</div>
+            <input type="file" id="txtInput" accept=".txt,text/plain" onchange="onTextFile(event)">
+          </div>
+          <div class="mini-card">
+            <div class="mini-t">Add images for the PDF</div>
+            <div class="mini-s">Optional diagrams, slides, charts, or board photos. PNG/JPG works best.</div>
+            <input type="file" id="imageInput" accept="image/png,image/jpeg,image/jpg" multiple onchange="onImages(event)">
+            <div id="imageGrid" class="image-grid"></div>
+          </div>
+        </div>
+        <div id="transcriptArea" class="gone" style="margin-top:16px">
+          <label>Transcript <span style="color:var(--ft);font-weight:400">- edit if needed, then continue</span></label>
+          <textarea id="transcript" style="min-height:140px;font-size:13px"></textarea>
+        </div>
+        <button class="btn btn-p" style="margin-top:12px" onclick="prepareNotesStep()">Looks good - generate notes</button>
+        <button class="btn btn-o btn-sm" style="width:100%;margin-top:12px" onclick="step(1)">Back</button>
+      </div>
+
+      <!-- step 3 generate -->
+      <div id="f3" class="gone">
+        <div class="h2">Build the notes</div>
+        <div class="lead">We turn your transcript into structured notes - using <b>only what you said</b>, nothing from textbooks.</div>
+        <div class="warn"><span class="ic">Info</span><div>LectureAI never adds outside facts. If it isn't in your lecture, it won't be in the notes - that's the promise your students see.</div></div>
+        <div id="genError" class="gone" style="background:var(--red-bg);border:1px solid #f0cdc8;border-radius:var(--r);padding:12px 13px;font-size:13px;color:var(--red);line-height:1.5;margin-bottom:14px"></div>
+        <button class="btn btn-g" id="genBtn" onclick="doNotes()"><span id="genTx">Generate study notes</span><div class="spin" id="genSpin"></div></button>
+        <div id="genProg" class="gone"><div class="pbar"><div class="fill" id="genFill"></div></div><div class="pmeta"><span id="genLbl">Reading your lecture...</span><span id="genPct">0%</span></div></div>
+        <button class="btn btn-o btn-sm" style="width:100%;margin-top:12px" onclick="step(2)">Back</button>
+      </div>
+
+      <!-- step 4 review -->
+      <div id="f4" class="gone">
+        <div class="h2">Review &amp; edit</div>
+        <div class="lead">Tap any text to fix it. Nothing is locked.</div>
+        <span class="badge badge-g" style="margin-bottom:14px">100% from your lecture</span>
+        <div id="reviewBody"></div>
+        <button class="btn btn-p" style="margin-top:6px" onclick="step(5)">Looks right - set price</button>
+        <button class="btn btn-o btn-sm" style="width:100%;margin-top:12px" onclick="step(3)">Regenerate</button>
+      </div>
+
+      <!-- step 5 price + share -->
+      <div id="f5" class="gone">
+        <div class="h2">Price &amp; share</div>
+        <div class="lead">Pick a price. We make a link you send your students. Each student gets their own watermarked copy.</div>
+        <div class="tiers" id="tierGrid">
+          <div class="tier" data-price="199" data-tier="Handout" onclick="pickTier(this)"><div class="tn">Handout</div><div class="tp">Rs 199</div></div>
+          <div class="tier sel" data-price="499" data-tier="Study Pack" onclick="pickTier(this)"><div class="tn">Study Pack</div><div class="tp">Rs 499</div></div>
+          <div class="tier" data-price="999" data-tier="Premium" onclick="pickTier(this)"><div class="tn">Premium</div><div class="tp">Rs 999</div></div>
+        </div>
+        <div class="fld"><label>Custom price (INR)</label><input id="customPrice" type="number" value="499" inputmode="numeric" oninput="onPriceInput()"></div>
+
+        <div class="split">
+          <div class="s s-g"><div class="lbl">You keep</div><div class="amt">Rs <span id="splitProf">349</span></div><div class="pct">70%</div></div>
+          <div class="s s-n"><div class="lbl">LectureAI</div><div class="amt">Rs <span id="splitOp">150</span></div><div class="pct">30%</div></div>
+        </div>
+        <div class="hint" style="margin-bottom:16px">Razorpay's processing fee is taken from the total before the split. Payments land in the Razorpay account connected by your Key ID.</div>
+
+        <button class="btn btn-p" onclick="makeLink()" style="margin-bottom:14px">Generate share link &amp; preview PDF</button>
+
+        <div id="shareArea" class="gone">
+          <div class="divider"></div>
+          <label>Your student link</label>
+          <div class="linkbox"><input id="shareLink" readonly><button class="btn btn-p btn-sm" onclick="copyLink()">Copy</button></div>
+          <button class="btn btn-wa" onclick="shareWA()">Share on WhatsApp</button>
+          <button class="btn btn-o" style="margin-top:10px" onclick="previewPdf()">Preview the PDF students get</button>
+          <div class="hint" style="text-align:center;margin-top:12px">Students open the link, pay, and instantly download their personalised copy.</div>
+        </div>
+        <button class="btn btn-o btn-sm" style="width:100%;margin-top:14px" onclick="step(4)">Back to notes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIBRARY -->
+  <div class="scr" id="library">
+    <div class="wrap">
+      <div class="h1">Library</div>
+      <div class="lead">Every study pack you've made. Tap to re-share or preview.</div>
+      <div id="libFull"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="scr" id="settings">
+    <div class="wrap">
+      <div class="h1">Setup</div>
+      <div class="lead">Keys live only on this device. Nothing is sent anywhere except Groq (for notes) and Razorpay (for payments).</div>
+
+      <div class="card">
+        <div class="card-t">Groq API key</div>
+        <div class="card-s" style="margin-bottom:12px">Powers transcription and notes. Free at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--green)">console.groq.com/keys</a> - no card.</div>
+        <input id="setGroq" placeholder="gsk_..." type="password">
+        <div class="hint">Paste your own Groq key for transcription and deeper AI notes. Without it, pasted transcripts still generate basic local notes.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-t">Razorpay Key ID</div>
+        <div class="card-s" style="margin-bottom:12px">The <b>public</b> key (<span class="mono">rzp_...</span>) that takes payments. Never paste the secret key here.</div>
+        <input id="setRzp" placeholder="rzp_live_... or rzp_test_...">
+        <div class="hint">Your brother creates this in his Razorpay dashboard after KYC. Only the Key ID is needed here.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-t">Profile</div>
+        <div class="fld" style="margin-top:10px"><label>Name</label><input id="setName"></div>
+        <div class="fld"><label>Institution</label><input id="setInst"></div>
+        <div class="fld" style="margin-bottom:0"><label>Subject</label><input id="setSubj"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-t">Lecture rights</div>
+        <div class="card-s" style="margin-bottom:12px">Confirm you own the content you upload. This is shown to students as your assurance.</div>
+        <div class="chk" id="setChk" onclick="toggleSetChk()" style="margin-bottom:0">
+          <div class="chk-box"><svg width="13" height="13" viewBox="0 0 13 13"><path d="M2 6.5L5 9.5L11 3.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="chk-tx"><b>I own the rights to my lectures</b> and I'm allowed to sell notes based on them.</div>
+        </div>
+      </div>
+
+      <button class="btn btn-p" onclick="saveSettings()">Save</button>
+      <div class="warn" style="margin-top:16px"><span class="ic">Info</span><div><b>Publish requirement:</b> paid student links need your Razorpay Key ID here, plus `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` in your hosting environment. Downloads unlock only after server-side Razorpay signature verification succeeds.</div></div>
+    </div>
+  </div>
+
+  <!-- nav -->
+  <div class="nav" id="navBar">
+    <button data-nav="home" onclick="go('home')"><span class="ni">H</span><span class="nl">Home</span></button>
+    <button data-nav="flow" onclick="newLecture()"><span class="ni">+</span><span class="nl">New</span></button>
+    <button data-nav="library" onclick="go('library')"><span class="ni">L</span><span class="nl">Library</span></button>
+    <button data-nav="settings" onclick="go('settings')"><span class="ni">S</span><span class="nl">Setup</span></button>
+  </div>
+</div>
+
+<!-- PDF preview sheet -->
+<div class="ov" id="pdfSheet">
+  <div class="sheet">
+    <div class="grip"></div>
+    <div class="sheet-h"><div class="sheet-t">PDF preview</div><button class="sheet-x" onclick="closeSheet('pdfSheet')">x</button></div>
+    <div class="card-s" style="margin-bottom:14px">This is what a student downloads, with their name watermarked across it.</div>
+    <div id="pdfPreviewBody" style="font-size:13px"></div>
+    <button class="btn btn-p" style="margin-top:16px" onclick="downloadSample()">Download a sample copy</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var DEFAULT_GROQ = "";
+var S = {
+  key:"", rzp:"", name:"", inst:"", subj:"",
+  topic:"", lang:"en", outLang:"same", fileName:"", tr:"", notes:null,
+  price:499, tier:"Study Pack", chk:false, lib:[], images:[]
+};
+var curStep = 1, tTmr;
+
+/* ---------- storage ---------- */
+function load(){
+  try{var d=JSON.parse(localStorage.getItem("lectureai")||"{}");Object.assign(S,d);}catch(e){}
+  if(!S.key) S.key = DEFAULT_GROQ;
+}
+function save(){
+  try{localStorage.setItem("lectureai",JSON.stringify({key:S.key,rzp:S.rzp,name:S.name,inst:S.inst,subj:S.subj,chk:S.chk,lib:S.lib}));}catch(e){}
+}
+function toast(msg,type){
+  var el=document.getElementById("toast");
+  if(!el) return;
+  clearTimeout(tTmr);
+  el.textContent=msg||"";
+  el.className="toast show"+(type?(" "+type):"");
+  tTmr=setTimeout(function(){el.className="toast"+(type?(" "+type):"");},2600);
+}
+
+/* ---------- navigation ---------- */
+function showScr(id){
+  document.querySelectorAll("#mainApp .scr").forEach(function(s){s.classList.remove("on");});
+  var el=document.getElementById(id); if(el) el.classList.add("on");
+  window.scrollTo(0,0);
+}
+function go(scr){
+  showScr(scr);
+  document.querySelectorAll("#navBar button").forEach(function(b){b.classList.toggle("on", b.dataset.nav===scr);});
+  if(scr==="home") renderLibPreview();
+  if(scr==="library") renderLibFull();
+  if(scr==="settings") fillSettings();
+}
+function newLecture(){
+  if(!S.name){ go("settings"); toast("Add your name in Setup first","err"); return; }
+  S.topic="";S.lang="en";S.fileName="";S.tr="";S.notes=null;S.images=[];
+  document.getElementById("lcTopic").value="";
+  document.getElementById("fileTag").innerHTML="";
+  document.getElementById("transcribeArea").classList.add("gone");
+  document.getElementById("transcriptArea").classList.add("gone");
+  if(document.getElementById("directTranscript")) document.getElementById("directTranscript").value="";
+  if(document.getElementById("transcript")) document.getElementById("transcript").value="";
+  if(document.getElementById("txtInput")) document.getElementById("txtInput").value="";
+  if(document.getElementById("imageInput")) document.getElementById("imageInput").value="";
+  renderImages();
+  document.getElementById("shareArea").classList.add("gone");
+  curStep=1; step(1); showScr("flow");
+  document.querySelectorAll("#navBar button").forEach(function(b){b.classList.toggle("on", b.dataset.nav==="flow");});
+}
+
+/* ---------- onboarding ---------- */
+function toggleChk(){ S.chk=!S.chk; document.getElementById("obChk").classList.toggle("ck", S.chk); }
+function finishOnboard(){
+  var n=document.getElementById("obName").value.trim();
+  if(!n){toast("Enter your name","err");return;}
+  if(!S.chk){toast("Please confirm you own the rights","err");return;}
+  S.name=n; S.inst=document.getElementById("obInst").value.trim(); S.subj=document.getElementById("obSubj").value.trim();
+  save();
+  document.getElementById("homeHi").textContent="Welcome, "+S.name.split(" ")[0];
+  go("home");
+}
+
+/* ---------- step machine ---------- */
+function step(n){
+  curStep=n;
+  for(var i=1;i<=5;i++){var f=document.getElementById("f"+i); if(f) f.classList.toggle("gone", i!==n);}
+  document.querySelectorAll("#stepsBar .step").forEach(function(s){
+    var sn=+s.dataset.s; s.classList.toggle("done", sn<n); s.classList.toggle("now", sn===n);
+  });
+  if(n===1){ if(S.topic) document.getElementById("lcTopic").value=S.topic; if(document.getElementById("outLang")) document.getElementById("outLang").value=S.outLang||"same"; }
+  if(n===4) renderReview();
+  window.scrollTo(0,0);
+  if(n===2){
+    S.topic=document.getElementById("lcTopic").value.trim()||"Untitled lecture";
+    S.lang=document.getElementById("lcLang").value;
+    S.outLang=document.getElementById("outLang").value||"same";
+  }
+}
+
+/* ---------- file ---------- */
+var audioFile=null;
+function onFile(e){
+  var f=e.target.files[0]; if(!f) return;
+  if(f.size>26*1024*1024){toast("File too large (max ~25 MB)","err");return;}
+  audioFile=f; S.fileName=f.name;
+  document.getElementById("fileTag").innerHTML='<div class="file-tag">Audio <span>'+f.name+'</span><span class="x" onclick="clearFile(event)">x</span></div>';
+  document.getElementById("transcribeArea").classList.remove("gone");
+}
+function clearFile(e){e.stopPropagation();audioFile=null;S.fileName="";document.getElementById("fileTag").innerHTML="";document.getElementById("transcribeArea").classList.add("gone");document.getElementById("fileInput").value="";}
+function onTranscriptInput(){
+  var val=(document.getElementById("directTranscript").value||"").trim();
+  S.tr=val;
+  document.getElementById("transcript").value=val;
+  document.getElementById("transcriptArea").classList.toggle("gone", !val);
+}
+function onTextFile(e){
+  var f=e.target.files[0]; if(!f) return;
+  if(f.size>2*1024*1024){toast("Transcript file too large (max 2 MB)","err");return;}
+  var r=new FileReader();
+  r.onload=function(){
+    var txt=String(r.result||"").trim();
+    document.getElementById("directTranscript").value=txt;
+    onTranscriptInput();
+    toast("Transcript loaded \u2713","ok");
+  };
+  r.onerror=function(){toast("Could not read transcript file","err");};
+  r.readAsText(f);
+}
+function onImages(e){
+  var files=Array.prototype.slice.call(e.target.files||[]);
+  if(!files.length) return;
+  var room=Math.max(0,8-S.images.length);
+  if(files.length>room) toast("Only 8 images can be added to one PDF","err");
+  files.slice(0,room).forEach(function(f){ readImageFile(f); });
+  e.target.value="";
+}
+function readImageFile(f){
+  if(!/^image\/(png|jpe?g)$/i.test(f.type||"")){toast("Use PNG or JPG images","err");return;}
+  if(f.size>8*1024*1024){toast("Image too large (max 8 MB each)","err");return;}
+  var r=new FileReader();
+  r.onload=function(){
+    var data=String(r.result||"");
+    var img=new Image();
+    img.onload=function(){
+      S.images.push({name:f.name, caption:f.name.replace(/\.[^.]+$/,"").replace(/[_-]+/g," "), data:data, type:f.type, w:img.naturalWidth||img.width, h:img.naturalHeight||img.height});
+      renderImages();
+      toast("Image added \u2713","ok");
+    };
+    img.onerror=function(){toast("Could not read image","err");};
+    img.src=data;
+  };
+  r.onerror=function(){toast("Could not read image","err");};
+  r.readAsDataURL(f);
+}
+function renderImages(){
+  var grid=document.getElementById("imageGrid"); if(!grid) return;
+  if(!S.images||!S.images.length){grid.innerHTML="";return;}
+  grid.innerHTML=S.images.map(function(im,i){
+    return '<div class="img-card"><img src="'+esc(im.data)+'" alt=""><div class="img-meta"><div class="img-name">'+esc(im.name)+'</div><input value="'+esc(im.caption||"")+'" placeholder="Short caption" oninput="editImageCaption('+i+',this.value)"><button class="img-remove" onclick="removeImage('+i+')">Remove</button></div></div>';
+  }).join("");
+}
+function editImageCaption(i,val){ if(S.images&&S.images[i]) S.images[i].caption=val; }
+function removeImage(i){ if(S.images){S.images.splice(i,1);renderImages();} }
+function syncTranscriptInput(){
+  var finalBox=document.getElementById("transcript");
+  var directBox=document.getElementById("directTranscript");
+  var finalText=finalBox?finalBox.value.trim():"";
+  var directText=directBox?directBox.value.trim():"";
+  S.tr=finalText||directText||S.tr||"";
+  if(finalBox) finalBox.value=S.tr;
+  if(directBox&&!directBox.value) directBox.value=S.tr;
+  if(document.getElementById("transcriptArea")) document.getElementById("transcriptArea").classList.toggle("gone", !S.tr);
+  return S.tr;
+}
+function prepareNotesStep(){
+  if(!syncTranscriptInput()){
+    toast("Add audio and transcribe it, or paste/upload a transcript first","err");
+    return;
+  }
+  step(3);
+}
+(function(){
+  var dz=document.getElementById("dz");
+  ["dragover","dragenter"].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.add("drag");});});
+  ["dragleave","drop"].forEach(function(ev){dz.addEventListener(ev,function(e){e.preventDefault();dz.classList.remove("drag");});});
+  dz.addEventListener("drop",function(e){var f=e.dataTransfer.files[0];if(f){document.getElementById("fileInput").files=e.dataTransfer.files;onFile({target:{files:[f]}});}});
+})();
+
+/* ---------- transcription (Groq Whisper) ---------- */
+async function doTranscribe(){
+  if(!audioFile){toast("Choose an audio file","err");return;}
+  if(!S.key){toast("Add your Groq key in Setup","err");go("settings");return;}
+  var btn=document.getElementById("trBtn"); btn.disabled=true;
+  document.getElementById("trSpin").classList.add("on");
+  document.getElementById("trProg").classList.remove("gone");
+  var prog=0; document.getElementById("trFill").style.width="0%";
+  var iv=setInterval(function(){ if(prog<88){prog+=6; setProg("tr",prog,"Whisper transcribing...");} },650);
+  var ctrl=new AbortController();
+  var killer=setTimeout(function(){ctrl.abort();},120000); // 120s - audio upload can be slower
+  try{
+    var fd=new FormData();
+    fd.append("file",audioFile);
+    fd.append("model","whisper-large-v3-turbo");
+    if(S.lang) fd.append("language",S.lang);
+    var res=await fetch("https://api.groq.com/openai/v1/audio/transcriptions",{
+      method:"POST", signal:ctrl.signal, headers:{"Authorization":"Bearer "+S.key}, body:fd
+    });
+    var data=await res.json().catch(function(){return{};});
+    if(!res.ok) throw new Error(groqErrorMsg(res.status,data));
+    setProg("tr",100,"Done");
+    S.tr=(data.text||"").trim();
+    if(!S.tr) throw new Error("No speech detected - check the audio file.");
+    document.getElementById("transcript").value=S.tr;
+    document.getElementById("directTranscript").value=S.tr;
+    document.getElementById("transcriptArea").classList.remove("gone");
+    toast("Transcribed \u2713","ok");
+  }catch(err){
+    var msg=(err&&err.name==="AbortError")?"Took too long (over 2 min) - try a smaller file or again.":(err.message||"Transcription failed");
+    toast(msg,"err");
+    setProg("tr",0," ");
+    document.getElementById("trProg").classList.add("gone");
+  }finally{
+    clearInterval(iv); clearTimeout(killer);
+    btn.disabled=false;
+    document.getElementById("trSpin").classList.remove("on");
+    document.getElementById("trTx").textContent="Re-transcribe";
+  }
+}
+function setProg(p,v,lbl){document.getElementById(p+"Fill").style.width=v+"%";document.getElementById(p+"Pct").textContent=Math.round(v)+"%";if(lbl)document.getElementById(p+"Lbl").textContent=lbl;}
+function outputLanguageName(){
+  var map={same:"the same language as the transcript",en:"English",hi:"Hindi",mr:"Marathi",ta:"Tamil",te:"Telugu"};
+  return map[S.outLang||"same"]||"the same language as the transcript";
+}
+function outputLanguageLabel(){
+  var map={same:"Same as transcript",en:"English",hi:"Hindi",mr:"Marathi",ta:"Tamil",te:"Telugu"};
+  return map[S.outLang||"same"]||"Same as transcript";
+}
+function validRazorpayKey(k){
+  return /^rzp_(test|live)_[A-Za-z0-9]+$/.test(String(k||"").trim());
+}
+async function postJSON(url,payload){
+  var res=await fetch(url,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload||{})
+  });
+  var data=await res.json().catch(function(){return{};});
+  if(!res.ok||data.error) throw new Error(data.error||data.message||("Request failed: "+res.status));
+  return data;
+}
+function resetPayButton(msg,type){
+  var btn=document.getElementById("coPay");
+  btn.disabled=false;
+  document.getElementById("coPaySpin").classList.remove("on");
+  if(msg) toast(msg,type||"err");
+}
+async function createCheckoutOrder(name,phone){
+  return postJSON("/api/create-order",{
+    amount:Number(coData.p||0),
+    currency:"INR",
+    receipt:"lectureai_"+Date.now().toString(36),
+    notes:{
+      topic:String((coData.t&&coData.t.topic)||"Lecture notes").slice(0,120),
+      professor:String(coData.prof||"").slice(0,120),
+      student:name.slice(0,120),
+      phone:phone.slice(0,40)
+    }
+  });
+}
+async function verifyCheckoutPayment(resp,expectedOrderId){
+  return postJSON("/api/verify-payment",{
+    razorpay_order_id:resp&&resp.razorpay_order_id,
+    razorpay_payment_id:resp&&resp.razorpay_payment_id,
+    razorpay_signature:resp&&resp.razorpay_signature,
+    expected_order_id:expectedOrderId
+  });
+}
+
+/* ---------- notes (Groq Llama, LECTURE-ONLY) ---------- */
+function notesPrompt(){
+  return [
+"You convert a lecture transcript into structured study notes. You are NOT a teacher and you do NOT know the subject. Your only source of truth is the transcript.",
+"Write the ENTIRE output in "+outputLanguageName()+". If the user selected same-language output, detect the transcript language and keep that language for every field, including headings, quiz, answers, labels, mnemonics and explanations.",
+"",
+"ABSOLUTE RULES - breaking any of these makes the output useless:",
+"1. Use ONLY information explicitly spoken in the transcript. If the lecturer did not say it, it does NOT go in the notes.",
+"2. NEVER add textbook facts, mechanisms, numbers, percentages, named laws, anatomical/clinical specifics, drug names, study citations, classifications, or 'well-known' background - even if correct - unless the lecturer actually said it.",
+"3. Mnemonics, exam tips, clinical pearls and revision lines must be built ONLY from content the lecturer covered. Do not invent new clinical facts to fill them.",
+"4. If a field would require outside knowledge to fill, return fewer items or an empty array. Faithful and short beats complete and invented.",
+"5. Do not rephrase a vague statement into a confident specific one. Keep the lecturer's level of detail.",
+"",
+"Return ONLY raw JSON (no markdown, no backticks, no commentary) in exactly this shape:",
+'{"topic":"short title","summary":"2-3 sentences strictly from the lecture","sections":[{"heading":"...","content":"2-3 sentences from the lecture","key_points":["point","point"]}],"mnemonics":["only if lecturer gave one or one is trivially built from their points"],"clinical_pearls":["only points the lecturer stressed"],"exam_traps":["only confusions the lecturer warned about"],"quick_revision":["one-line takeaways from the lecture"],"quiz":[{"q":"question from lecture content","options":["A","B","C","D"],"answer":0,"why":"explanation using only lecture content"}]}',
+"",
+"Aim for 3-4 sections and 4-6 quiz questions IF the lecture supports them. If the lecture is short or thin, produce fewer. Never pad."
+  ].join("\n");
+}
+function asArray(v){
+  if(Array.isArray(v)) return v;
+  if(v==null||v==="") return [];
+  if(typeof v==="string") return [v];
+  if(typeof v==="object") return Object.keys(v).map(function(k){return v[k];});
+  return [];
+}
+function normalizeNotes(n){
+  if(!n||typeof n!=="object") return null;
+  n.summary = typeof n.summary==="string" ? n.summary : (n.summary?String(n.summary):"");
+  n.topic = n.topic?String(n.topic):"";
+  n.sections = asArray(n.sections).map(function(s){
+    if(typeof s==="string") return {heading:"",content:s,key_points:[]};
+    s=s||{};
+    return {heading:s.heading?String(s.heading):"", content:s.content?String(s.content):"", key_points:asArray(s.key_points).filter(Boolean).map(String)};
+  });
+  n.clinical_pearls = asArray(n.clinical_pearls).filter(Boolean).map(String);
+  n.exam_traps      = asArray(n.exam_traps).filter(Boolean).map(String);
+  n.quick_revision  = asArray(n.quick_revision).filter(Boolean).map(String);
+  n.mnemonics       = asArray(n.mnemonics).filter(Boolean).map(String);
+  n.quiz = asArray(n.quiz).map(function(q){
+    if(!q||typeof q!=="object") return null;
+    return {q:String(q.q||q.question||""), options:asArray(q.options).map(String), answer:(typeof q.answer==="number"?q.answer:0), why:String(q.why||q.explanation||"")};
+  }).filter(function(q){return q&&q.q;});
+  return n;
+}
+function extractJSON(s){
+  s=(s||"").trim().replace(/^```json\s*/i,"").replace(/^```\s*/,"").replace(/\s*```$/,"").trim();
+  try{return JSON.parse(s);}catch(e){}
+  var a=s.indexOf("{"), b=s.lastIndexOf("}");
+  if(a>=0&&b>a){ try{return JSON.parse(s.slice(a,b+1));}catch(e){} }
+  return null;
+}
+function groqErrorMsg(status,body){
+  if(status===401) return "Groq key looks invalid - check it in Setup.";
+  if(status===429) return "Groq is rate-limited right now. Wait ~30s and try again.";
+  if(status===413) return "Transcript too long for one request. Try a shorter lecture.";
+  if(status>=500) return "Groq server is busy. Try again in a moment.";
+  return (body&&body.error&&body.error.message)||("Groq error "+status);
+}
+function trimText(s,max){
+  s=String(s||"").replace(/\s+/g," ").trim();
+  return s.length>max?s.slice(0,max-1).trim()+"...":s;
+}
+function transcriptSentences(){
+  var raw=String(S.tr||"").replace(/\s+/g," ").trim();
+  var parts=raw.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[raw];
+  return parts.map(function(x){return trimText(x,220);}).filter(function(x){return x.length>18;});
+}
+function fallbackHeading(txt,i){
+  var words=String(txt||"Key idea").replace(/[^\w\s-]/g,"").trim().split(/\s+/).filter(Boolean).slice(0,7);
+  return words.length?words.join(" "):"Key idea "+(i+1);
+}
+function localNotesFromTranscript(reason){
+  var sent=transcriptSentences();
+  if(!sent.length) throw new Error("The transcript is empty, so notes cannot be built yet.");
+  var topic=trimText(S.topic||fallbackHeading(sent[0],0),90);
+  var summary=trimText(sent.slice(0,3).join(" "),420);
+  var count=Math.min(5,Math.max(3,Math.ceil(sent.length/4)));
+  var per=Math.max(1,Math.ceil(sent.length/count));
+  var sections=[];
+  for(var i=0;i<count;i++){
+    var chunk=sent.slice(i*per,(i+1)*per);
+    if(!chunk.length) continue;
+    sections.push({
+      heading:fallbackHeading(chunk[0],i),
+      content:trimText(chunk.slice(0,2).join(" "),520),
+      key_points:chunk.slice(0,5).map(function(x){return trimText(x,170);})
+    });
+  }
+  var keyWords=/\b(important|key|remember|clinical|patient|diagnos|treat|risk|cause|symptom|sign|exam|test|manage|feature)\b/i;
+  var trapWords=/\b(not|except|avoid|mistake|confus|however|but|unless|differ|contra|never|always)\b/i;
+  var pearls=sent.filter(function(x){return keyWords.test(x);}).slice(0,5);
+  var traps=sent.filter(function(x){return trapWords.test(x);}).slice(0,4);
+  var quick=sent.slice(0,6).map(function(x){return trimText(x,155);});
+  var quizSource=sent.slice(0,8);
+  var quiz=quizSource.slice(0,Math.min(4,quizSource.length)).map(function(correct,i){
+    var pool=quizSource.filter(function(x){return x!==correct;}).slice(0,3);
+    while(pool.length<3) pool.push("Review this part again in the lecture.");
+    var options=[correct].concat(pool).slice(0,4);
+    var shift=i%options.length;
+    options=options.slice(shift).concat(options.slice(0,shift));
+    return {
+      q:"Which point came from the lecture?",
+      options:options.map(function(x){return trimText(x,115);}),
+      answer:options.indexOf(correct),
+      why:"This answer matches the transcript. Read the nearby notes again to lock it in."
+    };
+  });
+  return normalizeNotes({
+    topic:topic,
+    professor:S.name,
+    institution:S.inst,
+    subject:S.subj,
+    summary:summary,
+    sections:sections,
+    clinical_pearls:pearls,
+    exam_traps:traps,
+    quick_revision:quick,
+    mnemonics:[],
+    quiz:quiz,
+    source_note:reason||"Generated locally from transcript"
+  });
+}
+function finishNotesGeneration(n,msg){
+  n=normalizeNotes(n);
+  if(!n||(!n.sections.length&&!n.summary)) throw new Error("The notes came back empty or malformed.");
+  n.professor=S.name; n.institution=S.inst; n.subject=S.subj; if(!n.topic)n.topic=S.topic;
+  n.output_language=outputLanguageLabel();
+  n.images=placeImagesForNotes(n);
+  S.notes=n;
+  setProg("gen",100,"Done");
+  toast(msg||"Notes ready \u2713","ok");
+  try{ step(4); }
+  catch(rerr){ showGenErr("Notes built, but the preview couldn't render: "+(rerr.message||rerr)+". Tell this to support."); }
+}
+function wordsForMatch(s){
+  return String(s||"").toLowerCase().replace(/[^a-z0-9\s]/g," ").split(/\s+/).filter(function(w){return w.length>3;});
+}
+function scoreImageForSection(im,sec,notes){
+  var src=wordsForMatch((im.caption||"")+" "+(im.name||"")+" "+(im.description||"")+" "+(im.keywords||[]).join(" "));
+  if(!src.length) return 0;
+  var target=wordsForMatch((sec.heading||"")+" "+(sec.content||"")+" "+(sec.key_points||[]).join(" ")+" "+(notes.topic||""));
+  var set={}; target.forEach(function(w){set[w]=1;});
+  return src.reduce(function(a,w){return a+(set[w]?1:0);},0);
+}
+function placeImagesForNotes(notes){
+  return (S.images||[]).map(function(im,idx){
+    var best=0, bestScore=-1;
+    (notes.sections||[]).forEach(function(sec,i){
+      var sc=scoreImageForSection(im,sec,notes);
+      if(sc>bestScore){bestScore=sc;best=i;}
+    });
+    if(bestScore<=0 && notes.sections&&notes.sections.length) best=idx%notes.sections.length;
+    return {name:im.name, caption:im.caption||im.name, description:im.description||"", keywords:im.keywords||[], data:im.data, type:im.type, w:im.w, h:im.h, sectionIndex:best};
+  });
+}
+function imagePlacementSummary(){
+  return (S.images||[]).map(function(im,i){
+    return (i+1)+". "+(im.caption||im.name)+" ("+(im.w||"?")+"x"+(im.h||"?")+")"+(im.description?" - "+im.description:"");
+  }).join("\n");
+}
+async function analyzeImagesForNotes(){
+  if(!S.key||!S.images||!S.images.length) return;
+  var usable=S.images.filter(function(im){return im.data&&im.data.length<3900000;}).slice(0,5);
+  if(!usable.length) return;
+  var content=[{type:"text",text:"Read these lecture images for PDF placement only. Return JSON: {images:[{name,description,keywords:[...]}]}. Keep descriptions short and do not invent lecture facts."}];
+  usable.forEach(function(im){
+    content.push({type:"text",text:"Image file: "+im.name+"; lecturer caption: "+(im.caption||"")});
+    content.push({type:"image_url",image_url:{url:im.data}});
+  });
+  var ctrl=new AbortController();
+  var killer=setTimeout(function(){ctrl.abort();},45000);
+  try{
+    var res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+      method:"POST",
+      signal:ctrl.signal,
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+S.key},
+      body:JSON.stringify({model:"meta-llama/llama-4-scout-17b-16e-instruct",temperature:0.1,max_tokens:1200,response_format:{type:"json_object"},messages:[{role:"user",content:content}]})
+    });
+    var data=await res.json().catch(function(){return{};});
+    if(!res.ok||data.error) throw new Error(groqErrorMsg(res.status,data));
+    var txt=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||"";
+    var parsed=extractJSON(txt)||{};
+    asArray(parsed.images).forEach(function(x,idx){
+      var im=usable[idx]; if(!im||!x) return;
+      im.description=String(x.description||im.description||"").slice(0,240);
+      im.keywords=asArray(x.keywords).map(String).slice(0,10);
+      if(x.caption&&!im.caption) im.caption=String(x.caption).slice(0,120);
+    });
+  }catch(e){
+    showGenErr("Images will still be placed using captions/filenames. Vision analysis was unavailable: "+(e.message||e));
+  }finally{
+    clearTimeout(killer);
+  }
+}
+async function doNotes(){
+  syncTranscriptInput();
+  if(!S.tr){toast("No transcript yet","err");step(2);return;}
+  var localOnly=!S.key;
+  var btn=document.getElementById("genBtn"); btn.disabled=true;
+  document.getElementById("genSpin").classList.add("on");
+  document.getElementById("genProg").classList.remove("gone");
+  var prog=0; document.getElementById("genFill").style.width="0%";
+  setProg("gen",0,"Reading your lecture...");
+  var ge=document.getElementById("genError"); if(ge) ge.classList.add("gone");
+  var iv=setInterval(function(){if(prog<90){prog+=7;setProg("gen",prog,"Structuring your lecture...");}},600);
+  var imageCtx=imagePlacementSummary();
+  var ctx="Topic the lecturer gave: "+S.topic+"\nProfessor: "+S.name+"\nInstitution: "+S.inst+"\nSubject: "+S.subj+"\nRequested output language: "+outputLanguageName()+(imageCtx?"\n\nOPTIONAL IMAGE LIST FOR PDF PLACEMENT:\n"+imageCtx:"")+"\n\nTRANSCRIPT (the only source you may use):\n"+S.tr.slice(0,9000);
+  var ctrl=new AbortController();
+  var killer=setTimeout(function(){ctrl.abort();},75000); // hard 75s timeout - can never hang forever
+  try{
+    if(localOnly){
+      setProg("gen",55,"Building notes on this device...");
+      await new Promise(function(done){setTimeout(done,120);});
+      finishNotesGeneration(localNotesFromTranscript("No Groq key was set."),"Notes ready locally \u2713");
+      showGenErr("Generated locally because no Groq key is set. Add a Groq key in Setup for deeper AI notes.");
+      return;
+    }
+    if(S.images&&S.images.length){
+      setProg("gen",12,"Reading uploaded images...");
+      await analyzeImagesForNotes();
+    }
+    var res=await fetch("https://api.groq.com/openai/v1/chat/completions",{
+      method:"POST",
+      signal:ctrl.signal,
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+S.key},
+      body:JSON.stringify({model:"llama-3.3-70b-versatile",temperature:0.2,max_tokens:4000,response_format:{type:"json_object"},messages:[{role:"system",content:notesPrompt()},{role:"user",content:ctx}]})
+    });
+    var data=await res.json().catch(function(){return{};});
+    if(!res.ok) throw new Error(groqErrorMsg(res.status,data));
+    if(data.error) throw new Error(data.error.message||"Groq error");
+    var content=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||"";
+    finishNotesGeneration(extractJSON(content),"Notes ready \u2713");
+/*
+    var n=normalizeNotes(extractJSON(content));
+    if(!n||(!n.sections.length&&!n.summary)) throw new Error("The notes came back empty or malformed. Tap Generate again - it usually works on a retry.");
+    n.professor=S.name; n.institution=S.inst; n.subject=S.subj; if(!n.topic)n.topic=S.topic;
+    S.notes=n;
+    setProg("gen",100,"Done");
+    toast("Notes ready \u2713","ok");
+    try{ step(4); }
+    catch(rerr){ showGenErr("Notes built, but the preview couldn't render: "+(rerr.message||rerr)+". Tell this to support."); }
+*/
+  }catch(err){
+    var fallbackMsg = (err&&err.name==="AbortError") ? "Groq took too long, so local notes were generated instead." : (err.message||"Groq could not build notes, so local notes were generated instead.");
+    try{
+      finishNotesGeneration(localNotesFromTranscript(fallbackMsg),"Notes ready locally \u2713");
+      showGenErr(fallbackMsg+" You can regenerate after checking your connection or API key.");
+      return;
+    }catch(fallbackErr){
+      var finalMsg=fallbackErr.message||"Couldn't build notes. Check that the transcript has readable text.";
+      toast(finalMsg,"err");
+      showGenErr(finalMsg);
+      setProg("gen",0," ");
+      document.getElementById("genProg").classList.add("gone");
+      return;
+    }
+    var msg = (err&&err.name==="AbortError") ? "Took too long (over 75s) - Groq may be busy. Tap Generate to retry." : (err.message||"Couldn't build notes - try again.");
+    toast(msg,"err");
+    showGenErr(msg);
+    setProg("gen",0," ");
+    document.getElementById("genProg").classList.add("gone");
+  }finally{
+    clearInterval(iv); clearTimeout(killer);
+    btn.disabled=false;
+    document.getElementById("genSpin").classList.remove("on");
+    document.getElementById("genTx").textContent="Regenerate notes";
+  }
+}
+
+/* ---------- review / edit ---------- */
+function ed(path,i,field){ return 'contenteditable="true" class="editable" oninput="editNote(\''+path+'\','+i+',\''+(field||'')+'\',this.innerText)"'; }
+function showGenErr(msg){var e=document.getElementById("genError");if(e){e.textContent=msg;e.classList.remove("gone");}}
+function renderReview(){
+  try{ renderReviewInner(); }
+  catch(e){ document.getElementById("reviewBody").innerHTML='<div style="background:var(--red-bg);border:1px solid #f0cdc8;border-radius:10px;padding:14px;font-size:13px;color:var(--red)">Couldn\u2019t display these notes ('+esc(e.message||String(e))+'). Tap \u201cRegenerate\u201d to try again.</div>'; }
+}
+function renderReviewInner(){
+  var n=S.notes; if(!n){document.getElementById("reviewBody").innerHTML="";return;}
+  var h="";
+  h+='<div class="nsec"><div class="nsec-h" '+ed("topic",0)+'>'+esc(n.topic)+'</div><div class="nsec-b"><div '+ed("summary",0)+' style="font-size:13px;color:var(--mut)">'+esc(n.summary||"")+'</div></div></div>';
+  (n.sections||[]).forEach(function(s,i){
+    h+='<div class="nsec"><div class="nsec-h" '+ed("sectionHeading",i)+'>'+esc(s.heading)+'</div><div class="nsec-b">';
+    h+='<div '+ed("sectionContent",i)+' style="font-size:13px;margin-bottom:10px">'+esc(s.content||"")+'</div>';
+    (s.key_points||[]).forEach(function(p,j){ h+='<div class="kp"><span class="b">></span><span '+ed("kp_"+i,j)+'>'+esc(p)+'</span></div>'; });
+    h+='</div></div>';
+  });
+  if(n.clinical_pearls&&n.clinical_pearls.length){h+='<div class="colorbox cb-pearl"><div class="cb-h">Clinical pearls</div>'+n.clinical_pearls.map(function(p,j){return '<div class="cb-item" '+ed("pearl",j)+'>'+esc(p)+'</div>';}).join("")+'</div>';}
+  if(n.exam_traps&&n.exam_traps.length){h+='<div class="colorbox cb-trap"><div class="cb-h">Exam traps</div>'+n.exam_traps.map(function(p,j){return '<div class="cb-item" '+ed("trap",j)+'>'+esc(p)+'</div>';}).join("")+'</div>';}
+  if(n.quick_revision&&n.quick_revision.length){h+='<div class="colorbox cb-rev"><div class="cb-h">Quick revision</div>'+n.quick_revision.map(function(p,j){return '<div class="cb-item" '+ed("rev",j)+'>'+esc(p)+'</div>';}).join("")+'</div>';}
+  if(n.mnemonics&&n.mnemonics.length){h+='<div class="colorbox cb-rev"><div class="cb-h">Mnemonics</div>'+n.mnemonics.map(function(p,j){return '<div class="cb-item" '+ed("mnem",j)+'>'+esc(p)+'</div>';}).join("")+'</div>';}
+  if(n.images&&n.images.length){h+='<div class="colorbox cb-rev"><div class="cb-h">PDF images</div>'+n.images.map(function(im){return '<div class="cb-item">'+esc(im.caption||im.name)+' <span style="color:var(--ft)">after section '+((im.sectionIndex||0)+1)+'</span></div>';}).join("")+'</div>';}
+  document.getElementById("reviewBody").innerHTML=h;
+}
+function editNote(path,i,field,val){
+  var n=S.notes; if(!n)return; val=val.trim();
+  if(path==="topic")n.topic=val;
+  else if(path==="summary")n.summary=val;
+  else if(path==="sectionHeading")n.sections[i].heading=val;
+  else if(path==="sectionContent")n.sections[i].content=val;
+  else if(path.indexOf("kp_")===0){var si=+path.split("_")[1];n.sections[si].key_points[i]=val;}
+  else if(path==="pearl")n.clinical_pearls[i]=val;
+  else if(path==="trap")n.exam_traps[i]=val;
+  else if(path==="rev")n.quick_revision[i]=val;
+  else if(path==="mnem")n.mnemonics[i]=val;
+}
+function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+/* ---------- price ---------- */
+function pickTier(el){
+  document.querySelectorAll("#tierGrid .tier").forEach(function(t){t.classList.remove("sel");});
+  el.classList.add("sel");
+  S.price=+el.dataset.price; S.tier=el.dataset.tier;
+  document.getElementById("customPrice").value=S.price;
+  updateSplit();
+}
+function onPriceInput(){ S.price=+document.getElementById("customPrice").value||0; document.querySelectorAll("#tierGrid .tier").forEach(function(t){t.classList.toggle("sel",+t.dataset.price===S.price);}); updateSplit(); }
+function updateSplit(){
+  document.getElementById("splitProf").textContent=Math.round(S.price*0.7);
+  document.getElementById("splitOp").textContent=Math.round(S.price*0.3);
+}
+
+/* ---------- share link (serverless: notes compressed into URL) ---------- */
+function base64EncodeUnicode(s){return btoa(unescape(encodeURIComponent(s)));}
+function base64DecodeUnicode(s){return decodeURIComponent(escape(atob(s)));}
+function packPayload(obj){
+  var json=JSON.stringify(obj);
+  if(window.LZString&&LZString.compressToEncodedURIComponent) return "lz_"+LZString.compressToEncodedURIComponent(json);
+  return "b64_"+base64EncodeUnicode(json).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function unpackPayload(packed){
+  if(packed.indexOf("lz_")===0) return JSON.parse(LZString.decompressFromEncodedURIComponent(packed.slice(3)));
+  if(packed.indexOf("b64_")===0){
+    var s=packed.slice(4).replace(/-/g,"+").replace(/_/g,"/");
+    while(s.length%4)s+="=";
+    return JSON.parse(base64DecodeUnicode(s));
+  }
+  if(window.LZString&&LZString.decompressFromEncodedURIComponent) return JSON.parse(LZString.decompressFromEncodedURIComponent(packed));
+  throw new Error("Link helper did not load");
+}
+function makeLink(){
+  if(!S.notes){toast("Generate notes first","err");return;}
+  if(S.price<=0){toast("Set a price","err");return;}
+  if(!validRazorpayKey(S.rzp)){toast("Add a valid Razorpay Key ID in Setup before sharing","err");go("settings");return;}
+  var payload={t:S.notes,p:S.price,n:S.tier,prof:S.name,inst:S.inst,subj:S.subj,rzp:S.rzp,outLang:S.outLang};
+  var packed=packPayload(payload);
+  var base=location.origin+location.pathname;
+  var link=base+"#buy="+packed;
+  if(link.length>7000){
+    toast("This link is too large to share. Remove PDF images or shorten the notes, then generate again.","err");
+    return;
+  }
+  document.getElementById("shareLink").value=link;
+  document.getElementById("shareArea").classList.remove("gone");
+  /* save to library */
+  S.lib.unshift({topic:S.notes.topic,tier:S.tier,price:S.price,when:Date.now(),link:link});
+  S.lib=S.lib.slice(0,40); save();
+  toast("Link ready","ok");
+}
+function copyLink(){var i=document.getElementById("shareLink");i.select();navigator.clipboard.writeText(i.value).then(function(){toast("Copied","ok");}).catch(function(){toast("Select and copy manually","");});}
+function shareWA(){
+  var link=document.getElementById("shareLink").value;
+  var msg="Notes for *"+S.notes.topic+"* - built from today's lecture. Get your own copy (Rs "+S.price+"):\n"+link;
+  window.open("https://wa.me/?text="+encodeURIComponent(msg),"_blank");
+}
+
+/* ---------- library ---------- */
+function renderLibPreview(){
+  var el=document.getElementById("libPreview");
+  if(!S.lib.length){el.innerHTML='<div class="card-s" style="text-align:center;padding:20px;color:var(--ft)">No lectures yet. Tap "New lecture" to make your first.</div>';return;}
+  el.innerHTML='<div class="eyebrow" style="margin-bottom:10px">Recent</div>'+S.lib.slice(0,3).map(libItem).join("");
+}
+function renderLibFull(){
+  var el=document.getElementById("libFull");
+  if(!S.lib.length){el.innerHTML='<div class="empty"><div class="ic">Library</div>Nothing here yet.</div>';return;}
+  el.innerHTML=S.lib.map(libItem).join("");
+}
+function libItem(x,i){
+  return '<div class="lib-item" onclick="reopen('+i+')"><div class="li-t">'+esc(x.topic)+'</div><div class="li-m">'+x.tier+' - Rs '+x.price+' - '+new Date(x.when).toLocaleDateString()+'</div></div>';
+}
+function reopen(i){
+  var x=S.lib[i]; if(!x)return;
+  document.getElementById("shareLink").value=x.link;
+  navigator.clipboard.writeText(x.link).then(function(){toast("Link copied","ok");}).catch(function(){toast("Reopened","ok");});
+}
+
+/* ---------- PDF (client-side, watermarked) ---------- */
+function saveTextNotes(notes,filename,opts){
+  opts=opts||{};
+  var lines=[];
+  lines.push(notes.topic||"Lecture notes");
+  if(notes.professor||notes.institution) lines.push((notes.professor||"")+(notes.institution?" - "+notes.institution:""));
+  if(notes.output_language) lines.push("Output language: "+notes.output_language);
+  if(opts.student) lines.push("Licensed to "+opts.student+" - "+(opts.pid||""));
+  lines.push("");
+  lines.push("Summary");
+  lines.push(notes.summary||"");
+  (notes.sections||[]).forEach(function(s){
+    lines.push("");
+    lines.push(s.heading||"Section");
+    if(s.content) lines.push(s.content);
+    (s.key_points||[]).forEach(function(p){lines.push("- "+p);});
+  });
+  [["Clinical pearls",notes.clinical_pearls],["Exam traps",notes.exam_traps],["Quick revision",notes.quick_revision],["Mnemonics",notes.mnemonics]].forEach(function(block){
+    if(block[1]&&block[1].length){lines.push("");lines.push(block[0]);block[1].forEach(function(p){lines.push("- "+p);});}
+  });
+  if(notes.images&&notes.images.length){
+    lines.push(""); lines.push("Images included in the PDF");
+    notes.images.forEach(function(im,i){lines.push((i+1)+". "+(im.caption||im.name||"Lecture image")+(im.description?" - "+im.description:""));});
+  }
+  if(notes.quiz&&notes.quiz.length){
+    lines.push(""); lines.push("Practice questions");
+    notes.quiz.forEach(function(q,i){
+      lines.push((i+1)+". "+q.q);
+      (q.options||[]).forEach(function(o,j){lines.push(String.fromCharCode(65+j)+") "+o);});
+      lines.push("Answer: "+String.fromCharCode(65+(q.answer||0))+" - "+(q.why||""));
+    });
+  }
+  var blob=new Blob([lines.join("\n")],{type:"text/plain;charset=utf-8"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=filename.replace(/\.pdf$/i,".txt");
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+}
+function buildPdf(notes,opts){
+  opts=opts||{};
+  if(!window.jspdf||!window.jspdf.jsPDF) throw new Error("PDF helper did not load. A text copy will be downloaded instead.");
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({unit:"pt",format:"a4"});
+  var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+  var M=48, y=0, page=1;
+  var NAVY=[26,26,46], GREEN=[26,110,60], RED=[200,57,43], MUT=[107,107,120], INK=[17,17,17], LINE=[224,224,228];
+  var BODY_FONT="helvetica";
+  function watermark(){
+    if(!opts.student) return;
+    doc.saveGraphicsState && doc.saveGraphicsState();
+    doc.setFont(BODY_FONT,"normal"); doc.setFontSize(8); doc.setTextColor(215,215,222);
+    var gs=doc.GState ? new doc.GState({opacity:0.045}) : null; if(gs) doc.setGState(gs);
+    var tag=opts.student+"  -  "+opts.pid;
+    for(var ry=230;ry<H;ry+=360){ doc.text(tag,W/2-110,ry,{angle:28}); }
+    if(gs) doc.setGState(new doc.GState({opacity:1}));
+    doc.restoreGraphicsState && doc.restoreGraphicsState();
+  }
+  function footer(){
+    doc.setFont(BODY_FONT,"normal");doc.setFontSize(7.5);doc.setTextColor(MUT[0],MUT[1],MUT[2]);
+    doc.text((notes.professor||"")+"  -  LectureAI",M,H-26);
+    doc.text("Page "+page,W-M,H-26,{align:"right"});
+    if(opts.student){doc.text("Licensed to "+opts.student+"  -  "+opts.pid,W/2,H-26,{align:"center"});}
+  }
+  function newPage(){doc.addPage();page++;y=M+18;watermark();footer();}
+  function need(h){if(y+h>H-46){newPage();}}
+  function setInk(c){doc.setTextColor(c[0],c[1],c[2]);}
+  function cssColor(c){c=c||INK;return "rgb("+c[0]+","+c[1]+","+c[2]+")";}
+  function hasUnicode(txt){return /[^\x00-\x7F]/.test(String(txt||""));}
+  function canvasContext(size,font){
+    if(!document||!document.createElement) return null;
+    var c=document.createElement("canvas"), ctx=c.getContext&&c.getContext("2d");
+    if(!ctx) return null;
+    ctx.font=(font==="bold"?"700 ":font==="italic"?"italic ":"")+Math.round(size*3)+"px Nirmala UI, Segoe UI, Arial, sans-serif";
+    return {canvas:c,ctx:ctx};
+  }
+  function wrapText(txt,size,width,font){
+    txt=String(txt||"");
+    var meas=canvasContext(size,font), ctx=meas&&meas.ctx;
+    if(!hasUnicode(txt)||!ctx) return doc.splitTextToSize(txt,width);
+    var out=[], paras=txt.split(/\n+/);
+    paras.forEach(function(p){
+      var units=p.indexOf(" ")>=0?p.split(/(\s+)/):p.split("");
+      var line="";
+      units.forEach(function(u){
+        var test=line+u;
+        if(line&&ctx.measureText(test).width/3>width){out.push(line.trim());line=u.trimStart?u.trimStart():u.replace(/^\s+/,"");}
+        else line=test;
+      });
+      if(line.trim()) out.push(line.trim());
+    });
+    return out.length?out:[""];
+  }
+  function textLine(txt,x,baseY,size,color,font){
+    txt=String(txt||"");
+    if(hasUnicode(txt)){
+      var scale=3, c=document.createElement("canvas"), ctx=c.getContext&&c.getContext("2d");
+      if(ctx){
+        ctx.font=(font==="bold"?"700 ":font==="italic"?"italic ":"")+Math.round(size*scale)+"px Nirmala UI, Segoe UI, Arial, sans-serif";
+        var topPad=size*0.65*scale, bottomPad=size*0.45*scale;
+        var w=Math.max(8,Math.ceil(ctx.measureText(txt).width+10*scale)), h=Math.ceil(size*scale+topPad+bottomPad);
+        c.width=w;c.height=h;
+        ctx.font=(font==="bold"?"700 ":font==="italic"?"italic ":"")+Math.round(size*scale)+"px Nirmala UI, Segoe UI, Arial, sans-serif";
+        ctx.fillStyle=cssColor(color);ctx.textBaseline="top";
+        ctx.fillText(txt,3*scale,topPad);
+        doc.addImage(c.toDataURL("image/png"),"PNG",x,baseY-size*1.18,w/scale,h/scale,undefined,"FAST");
+        return;
+      }
+    }
+    doc.setFont(BODY_FONT,font||"normal");doc.setFontSize(size);setInk(color||INK);doc.text(txt,x,baseY);
+  }
+  function para(txt,size,color,gap,font,x,w){
+    x=x||M; w=w||W-2*M;
+    var lines=wrapText(txt||"",size,w,font||"normal");
+    for(var i=0;i<lines.length;i++){need(size+6);textLine(lines[i],x,y,size,color||INK,font||"normal");y+=size+6;}
+    y+=(gap||0);
+  }
+  function heading(txt){
+    need(40);
+    textLine(txt,M,y,14,NAVY,"bold"); y+=8;
+    doc.setDrawColor(GREEN[0],GREEN[1],GREEN[2]);doc.setLineWidth(2);doc.line(M,y,M+34,y);y+=16;
+  }
+  function colorBox(title,items,rgb,bg){
+    if(!items||!items.length)return;
+    var pad=12, lh=15, innerW=W-2*M-2*pad;
+    /* measure */
+    var blocks=items.map(function(it){return wrapText(it,10.5,innerW,"normal");});
+    var bodyH=blocks.reduce(function(a,b){return a+b.length*lh+8;},0);
+    var boxH=pad+18+bodyH+pad-8;
+    need(boxH+10);
+    doc.setFillColor(bg[0],bg[1],bg[2]);doc.setDrawColor(rgb[0],rgb[1],rgb[2]);doc.setLineWidth(0.6);
+    doc.roundedRect(M,y,W-2*M,boxH,8,8,"FD");
+    var iy=y+pad+10;
+    textLine(title.toUpperCase(),M+pad,iy,8.5,rgb,"bold"); iy+=14;
+    blocks.forEach(function(lines,idx){
+      for(var i=0;i<lines.length;i++){textLine(lines[i],M+pad,iy,10.5,INK,"normal");iy+=lh;}
+      iy+=8;
+    });
+    y+=boxH+12;
+  }
+  function imageType(im){
+    var t=String(im.type||"").toUpperCase();
+    if(t.indexOf("PNG")>=0) return "PNG";
+    return "JPEG";
+  }
+  function drawPdfImage(im){
+    if(!im||!im.data) return;
+    var cap=(im.caption||im.name||"Lecture image")+(im.description?": "+im.description:"");
+    var maxW=W-2*M, maxH=260;
+    var iw=+im.w||1200, ih=+im.h||800;
+    var ratio=Math.min(maxW/iw,maxH/ih);
+    var dw=Math.max(120,iw*ratio), dh=Math.max(80,ih*ratio);
+    need(dh+48);
+    doc.setDrawColor(LINE[0],LINE[1],LINE[2]);doc.setLineWidth(0.8);
+    try{doc.addImage(im.data,imageType(im),M,y,dw,dh,undefined,"FAST");}
+    catch(e){return;}
+    doc.rect(M,y,dw,dh);
+    y+=dh+10;
+    doc.setFont(BODY_FONT,"italic");doc.setFontSize(9);setInk(MUT);
+    var cl=wrapText(cap,9,W-2*M,"italic");
+    for(var ci=0;ci<cl.length;ci++){need(12);textLine(cl[ci],M,y,9,MUT,"italic");y+=12;}
+    y+=8;
+  }
+  /* ---- COVER ---- */
+  watermark();
+  doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(0,0,W,150,"F");
+  doc.setFont(BODY_FONT,"normal");doc.setFontSize(9);doc.setTextColor(150,220,180);
+  doc.text("LECTUREAI - STUDY PACK",M,52);
+  doc.setFont(BODY_FONT,"bold");doc.setFontSize(23);doc.setTextColor(255,255,255);
+  var tl=wrapText(notes.topic||"Lecture notes",23,W-2*M,"bold");
+  for(var ti=0;ti<tl.length;ti++){textLine(tl[ti],M,84+ti*25,23,[255,255,255],"bold");}
+  doc.setFont(BODY_FONT,"normal");doc.setFontSize(11);doc.setTextColor(200,200,215);
+  textLine((notes.professor||"")+(notes.institution?"  -  "+notes.institution:""),M,84+tl.length*22+6,11,[200,200,215],"normal");
+  if(notes.output_language){textLine("Output: "+notes.output_language,M,84+tl.length*22+22,9,[200,200,215],"normal");}
+  y=178;
+  /* trust badge */
+  doc.setFillColor(234,243,238);doc.setDrawColor(201,227,211);doc.setLineWidth(0.6);
+  doc.roundedRect(M,y,W-2*M,30,7,7,"FD");
+  doc.setFont(BODY_FONT,"normal");doc.setFontSize(9);setInk(GREEN);
+  textLine("100% from "+(notes.professor||"this professor")+"'s lecture - no textbook additions.",M+12,y+19,9,GREEN,"normal");
+  y+=46;
+  footer();
+  heading("Summary");
+  para(notes.summary||"",11,INK,10);
+  (notes.sections||[]).forEach(function(s){
+    heading(s.heading||"");
+    para(s.content||"",10.5,INK,6);
+    (s.key_points||[]).forEach(function(p){
+      need(16);doc.setFont(BODY_FONT,"bold");doc.setFontSize(10.5);setInk(GREEN);doc.text(">",M,y);
+      doc.setFont(BODY_FONT,"normal");setInk(INK);
+      var lines=wrapText(p,10.5,W-2*M-14,"normal");
+      for(var i=0;i<lines.length;i++){if(i>0)need(15);textLine(lines[i],M+14,y,10.5,INK,"normal");y+=15;}
+    });
+    (notes.images||[]).filter(function(im){return im.sectionIndex===notes.sections.indexOf(s);}).forEach(drawPdfImage);
+    y+=8;
+  });
+  (notes.images||[]).filter(function(im){return im.sectionIndex==null||im.sectionIndex<0||im.sectionIndex>=(notes.sections||[]).length;}).forEach(drawPdfImage);
+  colorBox("Clinical pearls",notes.clinical_pearls,GREEN,[234,243,238]);
+  colorBox("Exam traps",notes.exam_traps,RED,[251,236,234]);
+  colorBox("Quick revision",notes.quick_revision,NAVY,[240,241,246]);
+  colorBox("Mnemonics",notes.mnemonics,NAVY,[240,241,246]);
+  /* quiz */
+  if(notes.quiz&&notes.quiz.length){
+    heading("Practice questions");
+    notes.quiz.forEach(function(q,i){
+      need(40);
+      var ql=wrapText((i+1)+". "+q.q,10.5,W-2*M,"bold");
+      for(var k=0;k<ql.length;k++){need(15);textLine(ql[k],M,y,10.5,INK,"bold");y+=15;}
+      (q.options||[]).forEach(function(o,j){para(String.fromCharCode(65+j)+")  "+o,10,MUT,0,"normal",M+12,W-2*M-12);});
+      y+=10;
+    });
+    /* answers page */
+    if(y>M+25) newPage();
+    heading("Answer key");
+    notes.quiz.forEach(function(q,i){
+      need(42);
+      para((i+1)+". "+String.fromCharCode(65+(q.answer||0))+(q.options?")  "+q.options[q.answer||0]:""),10.5,GREEN,0,"bold",M,W-2*M);
+      var wl=wrapText(q.why||"",10,W-2*M-12,"normal");
+      for(var k=0;k<wl.length;k++){need(13);textLine(wl[k],M+12,y,10,MUT,"normal");y+=13;}
+      y+=8;
+    });
+  }
+  /* disclaimer */
+  need(40);y+=6;doc.setFont(BODY_FONT,"italic");doc.setFontSize(8.5);setInk(MUT);
+  var dl=wrapText("Educational study aid generated from the lecturer's own recording. Verify against standard texts before clinical application.",8.5,W-2*M,"italic");
+  for(var i=0;i<dl.length;i++){textLine(dl[i],M,y,8.5,MUT,"italic");y+=12;}
+  return doc;
+}
+function previewPdf(){
+  if(!S.notes){toast("Generate notes first","err");return;}
+  var n=S.notes,h="";
+  h+='<div style="font-weight:600;font-size:15px;margin-bottom:4px">'+esc(n.topic)+'</div>';
+  h+='<div style="font-size:12px;color:var(--mut);margin-bottom:12px">'+esc(n.professor||"")+(n.institution?" - "+esc(n.institution):"")+'</div>';
+  if(n.output_language){h+='<div style="font-size:12px;color:var(--mut);margin-bottom:10px">Output: '+esc(n.output_language)+'</div>';}
+  h+='<span class="badge badge-g" style="margin-bottom:12px">100% from your lecture</span>';
+  h+='<div style="margin-top:10px;font-size:13px;color:var(--mut)">'+esc(n.summary||"")+'</div>';
+  h+='<div style="margin-top:12px;font-size:12px;color:var(--ft)">+ '+((n.sections||[]).length)+' sections - '+((n.quiz||[]).length)+' practice questions - '+((n.images||[]).length)+' images - pearls, traps & revision - watermarked per student</div>';
+  document.getElementById("pdfPreviewBody").innerHTML=h;
+  openSheet("pdfSheet");
+}
+function downloadSample(){
+  if(!S.notes)return;
+  var filename=(S.notes.topic||"lecture").replace(/[^a-z0-9]+/gi,"_")+"_sample.pdf";
+  try{
+    var doc=buildPdf(S.notes,{student:"SAMPLE COPY",pid:"PREVIEW"});
+    doc.save(filename);
+  }catch(e){
+    saveTextNotes(S.notes,filename,{student:"SAMPLE COPY",pid:"PREVIEW"});
+    toast("PDF helper was unavailable, so a text copy downloaded","ok");
+    return;
+  }
+  toast("Sample downloaded","ok");
+}
+
+/* ---------- modal helpers ---------- */
+function openSheet(id){document.getElementById(id).classList.add("on");}
+function closeSheet(id){document.getElementById(id).classList.remove("on");}
+
+/* ---------- settings ---------- */
+function toggleSetChk(){ S.chk=!S.chk; document.getElementById("setChk").classList.toggle("ck", S.chk); }
+function fillSettings(){
+  document.getElementById("setGroq").value=S.key||"";
+  document.getElementById("setRzp").value=S.rzp||"";
+  document.getElementById("setName").value=S.name||"";
+  document.getElementById("setInst").value=S.inst||"";
+  document.getElementById("setSubj").value=S.subj||"";
+  document.getElementById("setChk").classList.toggle("ck", !!S.chk);
+}
+function saveSettings(){
+  S.key=document.getElementById("setGroq").value.trim();
+  S.rzp=document.getElementById("setRzp").value.trim();
+  if(S.rzp&&!validRazorpayKey(S.rzp)){toast("Razorpay Key ID should look like rzp_test_... or rzp_live_...","err");return;}
+  S.name=document.getElementById("setName").value.trim();
+  S.inst=document.getElementById("setInst").value.trim();
+  S.subj=document.getElementById("setSubj").value.trim();
+  save(); updateConn(); toast("Saved","ok");
+}
+function updateConn(){
+  var el=document.getElementById("connStatus");
+  if(S.key){el.textContent="Connected";el.style.color="var(--green)";}
+  else{el.textContent="Setup";el.style.color="var(--mut)";}
+}
+
+/* ---------- STUDENT CHECKOUT ---------- */
+var coData=null;
+function initCheckout(packed){
+  document.getElementById("mainApp").style.display="none";
+  document.getElementById("checkoutApp").style.display="block";
+  try{ coData=unpackPayload(packed); }
+  catch(e){ document.getElementById("coTopic").textContent="Link not valid"; return; }
+  var n=coData.t;
+  document.getElementById("coInst").textContent=coData.inst||"Study material";
+  document.getElementById("coTopic").textContent=n.topic||"Lecture notes";
+  document.getElementById("coProf").textContent="by "+(coData.prof||"your professor");
+  document.getElementById("coTierName").textContent=coData.n||"Study Pack";
+  document.getElementById("coPrice").textContent=coData.p;
+  document.getElementById("coPayTx").textContent="Pay Rs "+coData.p+" with UPI";
+}
+async function studentPay(){
+  var name=document.getElementById("coName").value.trim();
+  var phone=document.getElementById("coPhone").value.trim();
+  if(!name){toast("Enter your name","err");return;}
+  if(!phone){toast("Enter your mobile number","err");return;}
+  if(!coData||!validRazorpayKey(coData.rzp)){toast("This payment link is missing a valid Razorpay Key ID. Ask the professor to regenerate it after Setup.","err");return;}
+  if(!window.Razorpay){toast("Razorpay Checkout did not load. Check your connection and reload this link.","err");return;}
+  var btn=document.getElementById("coPay");btn.disabled=true;document.getElementById("coPaySpin").classList.add("on");
+  var pid="RZP-"+Date.now().toString(36).toUpperCase();
+  coData._student=name; coData._phone=phone; coData._pid=pid;
+  var order;
+  try{
+    order=await createCheckoutOrder(name,phone);
+  }catch(e){
+    resetPayButton("Payment server is not configured: "+(e.message||e));
+    return;
+  }
+  var rzp=new Razorpay({
+    key:order.key_id||coData.rzp,
+    amount:order.amount||Math.round(Number(coData.p||0)*100), currency:order.currency||"INR",
+    order_id:order.order_id,
+    name:coData.prof||"LectureAI", description:(coData.t&&coData.t.topic)||"Lecture notes",
+    prefill:{name:name,contact:phone},
+    theme:{color:"#1a6e3c"},
+    handler:async function(resp){
+      try{
+        await verifyCheckoutPayment(resp,order.order_id);
+        coData._pid=resp.razorpay_payment_id||pid;
+        onPaid();
+      }catch(e){
+        resetPayButton("Payment could not be verified. Please contact the professor before retrying.","err");
+      }
+    },
+    modal:{ondismiss:function(){resetPayButton();}}
+  });
+  if(rzp.on){
+    rzp.on("payment.failed",function(resp){
+      resetPayButton((resp&&resp.error&&resp.error.description)||"Payment failed. Please try again.","err");
+    });
+  }
+  try{
+    rzp.open();
+    setTimeout(function(){
+      var rzpBox=document.querySelector(".razorpay-container");
+      var rzpVisible=rzpBox&&getComputedStyle(rzpBox).display!=="none";
+      if(btn.disabled&&!rzpVisible){
+        resetPayButton("Razorpay Checkout could not open. Reload and try again, or ask the professor for a fresh link.","err");
+      }
+    },3500);
+  }catch(e){
+    resetPayButton("Razorpay Checkout could not open: "+(e.message||e),"err");
+  }
+}
+function onPaid(){
+  document.getElementById("coPaySpin").classList.remove("on");
+  document.getElementById("coPay").classList.add("gone");
+  document.getElementById("coDone").classList.remove("gone");
+  studentDownload();
+}
+function studentDownload(){
+  if(!coData)return;
+  var filename=(coData.t.topic||"notes").replace(/[^a-z0-9]+/gi,"_")+"_"+(coData._student||"copy").replace(/[^a-z0-9]+/gi,"_")+".pdf";
+  try{
+    var doc=buildPdf(coData.t,{student:coData._student,pid:coData._pid});
+    doc.save(filename);
+  }catch(e){
+    saveTextNotes(coData.t,filename,{student:coData._student,pid:coData._pid});
+    toast("PDF helper was unavailable, so a text copy downloaded","ok");
+  }
+}
+
+/* ---------- boot ---------- */
+function boot(){
+  load();
+  var hash=location.hash||"";
+  if(hash.indexOf("#buy=")===0){ initCheckout(hash.slice(5)); return; }
+  updateConn();
+  if(S.name){ document.getElementById("homeHi").textContent="Welcome, "+S.name.split(" ")[0]; go("home"); }
+  else{ showScr("onboarding"); }
+}
+boot();
+</script>
+</body>
+</html>
+
+
+
+
+
+
